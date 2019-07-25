@@ -7,23 +7,24 @@ import kotlinx.coroutines.*
 
 class MainActivity : AppCompatActivity() {
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         button.setOnClickListener {
-            setTextOnMainThread("Click!")
+            setNewText("Click!")
             fakeApiRequest()
         }
     }
 
-    fun setTextOnMainThread(input: String){
-        CoroutineScope(Dispatchers.Main)
-            .launch { withContext(Dispatchers.Main){
-                val newText = text.text.toString() + "\n${input}"
-                text.setText(newText)
-            } }
+    private fun setNewText(input: String){
+        val newText = text.text.toString() + "\n$input"
+        text.text = newText
+    }
+    private fun setTextOnMainThread(input: String) {
+        GlobalScope.launch (Main) {
+            setNewText(input)
+        }
     }
 
     fun fakeApiRequest(){
