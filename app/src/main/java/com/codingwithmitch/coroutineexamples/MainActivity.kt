@@ -4,77 +4,52 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
 
 class MainActivity : AppCompatActivity() {
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         button.setOnClickListener {
-            setTextOnMainThread("Click!")
+            // Ideally you shouldn't use launch here at all
+            GlobalScope.launch { setTextOnMainThread("Click!") }
             fakeApiRequest()
         }
     }
 
-    fun setTextOnMainThread(input: String){
-        CoroutineScope(Dispatchers.Main)
-            .launch { withContext(Dispatchers.Main){
-                val newText = text.text.toString() + "\n${input}"
-                text.setText(newText)
-            } }
+    private suspend fun setTextOnMainThread(input: String) {
+        withContext(Main) {
+            val newText = text.text.toString() + "\n$input"
+            text.text = newText
+        }
     }
 
-    fun fakeApiRequest(){
+    private fun fakeApiRequest() {
+        GlobalScope.launch(IO) {
+            if (getResult1FromApi() == "Result #1") {
+                setTextOnMainThread("Got Result #1")
 
-        CoroutineScope(Dispatchers.IO)
-            .launch{ withContext(Dispatchers.IO){
-
-                val result1 = getResult1FromApi()
-
-                if(result1.equals("Result #1")) {
-
-                    setTextOnMainThread("Got Result #1")
-
-                    val result2 = getResult2FromApi()
-
-                    if(result2.equals("Result #2")){
-                        setTextOnMainThread("Got Result #2")
-                    }
-                    else{
-                        setTextOnMainThread("Couldn't get Result #2")
-                    }
+                if (getResult2FromApi() == "Result #2") {
+                    setTextOnMainThread("Got Result #2")
+                } else {
+                    setTextOnMainThread("Couldn't get Result #2")
                 }
-                else{
-                    setTextOnMainThread("Couldn't get Result #1")
-                }
-            } }
-
+            } else {
+                setTextOnMainThread("Couldn't get Result #1")
+            }
+        }
     }
 
-    suspend fun getResult1FromApi(): String{
-        Thread.sleep(2000)
+    private suspend fun getResult1FromApi(): String {
+        delay(2000)
         return "Result #1"
     }
 
-    suspend fun getResult2FromApi(): String{
-        Thread.sleep(1000)
+    private suspend fun getResult2FromApi(): String {
+        delay(1000)
         return "Result #2"
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
