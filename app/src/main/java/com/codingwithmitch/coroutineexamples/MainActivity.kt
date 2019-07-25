@@ -14,7 +14,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         button.setOnClickListener {
-            // Ideally you should use launch anything here at all
+            // Ideally you shouldn't use launch here at all
             GlobalScope.launch { setTextOnMainThread("Click!") }
             fakeApiRequest()
         }
