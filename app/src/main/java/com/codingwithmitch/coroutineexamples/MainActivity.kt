@@ -61,6 +61,7 @@ class MainActivity : AppCompatActivity() {
                 println("debug: job1 and job2 are complete.")
             }
 
+            // Separate job within the same coroutine context that runs independently of parentJob, Job1 and Job2
             launch {
                 for(delay in arrayOf(1, 2, 3, 4, 5, 6)){
                     delay(500)
