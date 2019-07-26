@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
     private suspend fun fakeApiRequest() {
         coroutineScope {
 
-            launch {
+            val job = launch {
 
                 val result1 = getResult1FromApi() // wait until job is done
 
@@ -55,6 +55,11 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     setTextOnMainThread("Couldn't get Result #1")
                 }
+            }
+
+            delay(1900) // delay coroutine for 1900 ms
+            if(job.isActive){
+                job.cancel() // cancel if 1900 ms elapses and job has not completed
             }
 
         }
