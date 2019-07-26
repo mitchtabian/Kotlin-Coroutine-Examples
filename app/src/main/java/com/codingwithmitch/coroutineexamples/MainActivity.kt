@@ -39,8 +39,8 @@ class MainActivity : AppCompatActivity() {
     private suspend fun fakeApiRequest() {
         coroutineScope {
 
-            val job = launch {
-                try{
+            val job = withTimeoutOrNull(JOB_TIMEOUT) {
+
                     val result1 = getResult1FromApi() // wait until job is done
 
                     if ( result1.equals("Result #1")) {
@@ -57,44 +57,15 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         setTextOnMainThread("Couldn't get Result #1")
                     }
-                }catch (e: CancellationException){
-                    println("debug: CancellationException: ${e.message}")
-                }
-                finally {
-                    println("debug: Finishing job. Cleaning up resources...")
-                }
-
             }
 
-            isJobRunning(job.isActive)
-
-            delay(JOB_TIMEOUT) // wait to see if job completes in this time
-
-            // Cancel Option 1
-            job.cancel(CancellationException("Job took longer than $JOB_TIMEOUT")) // cancel if delay time elapses and job has not completed
-            job.join() // wait for the cancellation to happen
-
-//             Cancel Option 2
-//            job.cancelAndJoin()
-
-            delay(1000)
-
-            isJobRunning(job.isActive)
-
+            if(job == null){
+                println("debug: Cancelling job...Job took longer than $JOB_TIMEOUT")
+            }
 
         }
     }
-
-    private fun isJobRunning(isActive: Boolean){
-        if(isActive){
-            println("debug: Job is active")
-        }
-        else{
-            println("debug: Job is not active")
-        }
-    }
-
-
+    
     private suspend fun getResult1FromApi(): String {
         delay(1000) // Does not block thread. Just suspends the coroutine inside the thread
         return "Result #1"
