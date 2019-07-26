@@ -2,8 +2,12 @@ package com.codingwithmitch.coroutineexamples
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
 
@@ -31,7 +35,6 @@ class MainActivity : AppCompatActivity() {
 
         CoroutineScope(Dispatchers.IO)
             .launch{ withContext(Dispatchers.IO){
-
                 val result1 = getResult1FromApi()
 
                 if(result1.equals("Result #1")) {
@@ -50,12 +53,12 @@ class MainActivity : AppCompatActivity() {
                 else{
                     setTextOnMainThread("Couldn't get Result #1")
                 }
-            } }
+            }}
 
     }
 
     suspend fun getResult1FromApi(): String{
-        Thread.sleep(2000)
+        Thread.sleep(1000)
         return "Result #1"
     }
 
@@ -64,18 +67,3 @@ class MainActivity : AppCompatActivity() {
         return "Result #2"
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
