@@ -60,6 +60,9 @@ class MainActivity : AppCompatActivity() {
                 }catch (e: CancellationException){
                     println("debug: CancellationException: ${e.message}")
                 }
+                finally {
+                    println("debug: Finishing job. Cleaning up resources...")
+                }
 
             }
 
