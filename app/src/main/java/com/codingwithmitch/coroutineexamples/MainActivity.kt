@@ -42,17 +42,32 @@ class MainActivity : AppCompatActivity() {
     private suspend fun fakeApiRequest() {
         coroutineScope {
 
-            val job1 = launch {
-                println("debug: launching job1 in thread: ${Thread.currentThread().name}")
-                val result1 = getResult1FromApi()
-                setTextOnMainThread("Got $result1")
+            val parentJob = launch {
+
+                val job1 = launch {
+                    println("debug: launching job1 in thread: ${Thread.currentThread().name}")
+                    val result1 = getResult1FromApi()
+                    setTextOnMainThread("Got $result1")
+                }
+                job1.join() // join job1 to parent job (blocking until completion)
+
+                val job2 = launch {
+                    println("debug: launching job2 in thread: ${Thread.currentThread().name}")
+                    val result2 = getResult2FromApi()
+                    setTextOnMainThread("Got $result2")
+                }
+                job2.join() // join job2 to parent job (blocking until completion)
+
+                println("debug: job1 and job2 are complete.")
             }
 
-            val job2 = launch {
-                println("debug: launching job2 in thread: ${Thread.currentThread().name}")
-                val result2 = getResult2FromApi()
-                setTextOnMainThread("Got $result2")
+            launch {
+                for(delay in arrayOf(1, 2, 3, 4, 5, 6)){
+                    delay(500)
+                    println("debug: is parent job active?: ${parentJob.isActive}")
+                }
             }
+
         }
     }
 
