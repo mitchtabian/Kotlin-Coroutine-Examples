@@ -38,6 +38,7 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * Job1 and Job2 run in parallel as different coroutines
+	 * Also see "Deferred, Async, Await" branch for parallel execution
      */
     private suspend fun fakeApiRequest() {
         coroutineScope {
