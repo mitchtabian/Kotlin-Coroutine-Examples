@@ -2,12 +2,13 @@ package com.codingwithmitch.coroutineexamples
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.SendChannel
+import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
 
@@ -17,7 +18,12 @@ class MainActivity : AppCompatActivity() {
 
         button.setOnClickListener {
             setNewText("Click!")
-            fakeApiRequest()
+
+
+
+            CoroutineScope(IO).launch {
+                fakeApiRequest()
+            }
         }
     }
 
@@ -25,45 +31,65 @@ class MainActivity : AppCompatActivity() {
         val newText = text.text.toString() + "\n$input"
         text.text = newText
     }
-    private fun setTextOnMainThread(input: String) {
-        GlobalScope.launch (Main) {
+    private suspend fun setTextOnMainThread(input: String) {
+        withContext (Main) {
             setNewText(input)
         }
     }
 
-    fun fakeApiRequest(){
+    private suspend fun fakeApiRequest() {
+        coroutineScope {
 
-        CoroutineScope(Dispatchers.IO)
-            .launch{ withContext(Dispatchers.IO){
-                val result1 = getResult1FromApi()
-
-                if(result1.equals("Result #1")) {
+            launch {
+                if (getResult1FromApi() == "Result #1") {
 
                     setTextOnMainThread("Got Result #1")
 
-                    val result2 = getResult2FromApi()
-
-                    if(result2.equals("Result #2")){
+                    if (getResult2FromApi() == "Result #2") {
                         setTextOnMainThread("Got Result #2")
-                    }
-                    else{
+                    } else {
                         setTextOnMainThread("Couldn't get Result #2")
                     }
-                }
-                else{
+                } else {
                     setTextOnMainThread("Couldn't get Result #1")
                 }
-            }}
+            }
 
+        }
     }
 
-    suspend fun getResult1FromApi(): String{
-        Thread.sleep(1000)
+
+    private suspend fun getResult1FromApi(): String {
+        delay(1000) // Does not block thread. Just suspends the coroutine inside the thread
         return "Result #1"
     }
 
-    suspend fun getResult2FromApi(): String{
-        Thread.sleep(1000)
+    private suspend fun getResult2FromApi(): String {
+        delay(1000)
         return "Result #2"
+    }
+
+    fun CoroutineScope.downloader(
+        references: ReceiveChannel<Int>,
+        results: SendChannel<String>
+    ) = launch{
+        val requested = mutableSetOf<String>()
+        for(ref in references){
+            val aString: String = ref.toString()
+            if(requested.add(aString)){
+                results.send(aString)
+            }
+
+        }
+    }
+
+    fun CoroutineScope.worker(
+        results: ReceiveChannel<String>
+    ) {
+        launch {
+            for(result in results){
+
+            }
+        }
     }
 }
