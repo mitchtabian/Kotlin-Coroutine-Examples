@@ -6,9 +6,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.channels.SendChannel
-import kotlin.concurrent.thread
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,12 +17,11 @@ class MainActivity : AppCompatActivity() {
         button.setOnClickListener {
             setNewText("Click!")
 
-
-
             CoroutineScope(IO).launch {
                 fakeApiRequest()
             }
         }
+        
     }
 
     private fun setNewText(input: String){
@@ -41,12 +38,17 @@ class MainActivity : AppCompatActivity() {
         coroutineScope {
 
             launch {
-                if (getResult1FromApi() == "Result #1") {
 
-                    setTextOnMainThread("Got Result #1")
+                val result1 = getResult1FromApi() // wait until job is done
 
-                    if (getResult2FromApi() == "Result #2") {
-                        setTextOnMainThread("Got Result #2")
+                if ( result1.equals("Result #1")) {
+
+                    setTextOnMainThread("Got $result1")
+
+                    val result2 = getResult2FromApi() // wait until job is done
+
+                    if (result2.equals("Result #2")) {
+                        setTextOnMainThread("Got $result2")
                     } else {
                         setTextOnMainThread("Couldn't get Result #2")
                     }
@@ -69,27 +71,4 @@ class MainActivity : AppCompatActivity() {
         return "Result #2"
     }
 
-    fun CoroutineScope.downloader(
-        references: ReceiveChannel<Int>,
-        results: SendChannel<String>
-    ) = launch{
-        val requested = mutableSetOf<String>()
-        for(ref in references){
-            val aString: String = ref.toString()
-            if(requested.add(aString)){
-                results.send(aString)
-            }
-
-        }
-    }
-
-    fun CoroutineScope.worker(
-        results: ReceiveChannel<String>
-    ) {
-        launch {
-            for(result in results){
-
-            }
-        }
-    }
 }
