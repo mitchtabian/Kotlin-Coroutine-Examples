@@ -10,6 +10,8 @@ import kotlinx.coroutines.Dispatchers.Main
 
 class MainActivity : AppCompatActivity() {
 
+    private val JOB_TIMEOUT = 1900L
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -21,7 +23,7 @@ class MainActivity : AppCompatActivity() {
                 fakeApiRequest()
             }
         }
-        
+
     }
 
     private fun setNewText(input: String){
@@ -38,30 +40,54 @@ class MainActivity : AppCompatActivity() {
         coroutineScope {
 
             val job = launch {
+                try{
+                    val result1 = getResult1FromApi() // wait until job is done
 
-                val result1 = getResult1FromApi() // wait until job is done
+                    if ( result1.equals("Result #1")) {
 
-                if ( result1.equals("Result #1")) {
+                        setTextOnMainThread("Got $result1")
 
-                    setTextOnMainThread("Got $result1")
+                        val result2 = getResult2FromApi() // wait until job is done
 
-                    val result2 = getResult2FromApi() // wait until job is done
-
-                    if (result2.equals("Result #2")) {
-                        setTextOnMainThread("Got $result2")
+                        if (result2.equals("Result #2")) {
+                            setTextOnMainThread("Got $result2")
+                        } else {
+                            setTextOnMainThread("Couldn't get Result #2")
+                        }
                     } else {
-                        setTextOnMainThread("Couldn't get Result #2")
+                        setTextOnMainThread("Couldn't get Result #1")
                     }
-                } else {
-                    setTextOnMainThread("Couldn't get Result #1")
+                }catch (e: CancellationException){
+                    println("debug: CancellationException: ${e.message}")
                 }
+
             }
 
-            delay(1900) // delay coroutine for 1900 ms
-            if(job.isActive){
-                job.cancel() // cancel if 1900 ms elapses and job has not completed
-            }
+            isJobRunning(job.isActive)
 
+            delay(JOB_TIMEOUT) // wait to see if job completes in this time
+
+            // Cancel Option 1
+            job.cancel(CancellationException("Job took longer than $JOB_TIMEOUT")) // cancel if delay time elapses and job has not completed
+            job.join() // wait for the cancellation to happen
+
+//             Cancel Option 2
+//            job.cancelAndJoin()
+
+            delay(1000)
+
+            isJobRunning(job.isActive)
+
+
+        }
+    }
+
+    private fun isJobRunning(isActive: Boolean){
+        if(isActive){
+            println("debug: Job is active")
+        }
+        else{
+            println("debug: Job is not active")
         }
     }
 
