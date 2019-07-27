@@ -31,11 +31,7 @@ class MainActivity : AppCompatActivity() {
         val newText = text.text.toString() + "\n$input"
         text.text = newText
     }
-    private suspend fun setTextOnMainThread(input: String) {
-        withContext (Main) {
-            setNewText(input)
-        }
-    }
+
 
     private suspend fun fakeApiRequest() {
         coroutineScope {
