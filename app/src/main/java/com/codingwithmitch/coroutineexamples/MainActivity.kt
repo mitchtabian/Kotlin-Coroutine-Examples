@@ -6,7 +6,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlin.system.measureTimeMillis
+import kotlinx.coroutines.channels.Channel
 
 
 class MainActivity : AppCompatActivity() {
@@ -37,59 +37,31 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-    /**
-     * async() is a blocking call (similar to the job pattern with job.join())
-    *  NOTES:
-    *  1) IF you don't call await(), it does not wait for the result
-    *  2) Calling await() on both these Deffered values will EXECUTE THEM IN PARALLEL. But the RESULTS won't
-    *     be published until the last result is available (in this case that's result2
-     */
     private suspend fun fakeApiRequest() {
         coroutineScope {
-            
-            val parentJob = launch {
 
-                val executionTime = measureTimeMillis {
+            val channel = Channel<Int>()
 
-                    val result1: Deferred<String> = async {
-                        println("debug: launching job1 in thread: ${Thread.currentThread().name}")
-                        getResult1FromApi()
-                    }
-
-
-                    val result2: Deferred<String> = async {
-                        println("debug: launching job2 in thread: ${Thread.currentThread().name}")
-                        getResult2FromApi()
-                    }
-
-                    setTextOnMainThread("Got ${result1.await()}")
-                    setTextOnMainThread("Got ${result2.await()}")
+            val job = launch {
+                for (x in 1..5){
+                    println("debug: send: ${x}")
+                    channel.send(x)
                 }
-                println("debug: job1 and job2 are complete. It took ${executionTime} ms")
 
+                channel.close()
             }
 
-            // Separate job within the same coroutine context that runs independently of parentJob, Job1 and Job2
-            launch {
-                for(delay in arrayOf(1, 2, 3, 4, 5, 6)){
-                    delay(500)
-                    println("debug: is parent job active?: ${parentJob.isActive}")
-                }
+            // receive values from channel with .receive()
+//            repeat(5){
+//                println("debug: receive: ${channel.receive()}")
+//            }
+
+            // receive values from channel using a loop
+            for(receivedValue in channel){
+                println("debug: receive: ${receivedValue}")
             }
 
-
+            job.join()
         }
     }
-
-    private suspend fun getResult1FromApi(): String {
-        delay(1000) // Does not block thread. Just suspends the coroutine inside the thread
-        return "Result #1"
-    }
-
-    private suspend fun getResult2FromApi(): String {
-        delay(1000)
-        return "Result #2"
-    }
-
 }
