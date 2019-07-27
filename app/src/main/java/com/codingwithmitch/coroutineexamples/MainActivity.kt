@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
             CoroutineScope(IO).launch {
                 println("debug: CoroutineScope")
                 val result = fakeApiRequest()
-                println("debug: result: ${result}")
+                println("debug: result: ${result}") // waits until all jobs in coroutine scope are complete to return result
             }
 
         }
