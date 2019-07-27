@@ -5,7 +5,6 @@ import android.os.Bundle
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
 import kotlin.system.measureTimeMillis
 
 
@@ -21,8 +20,10 @@ class MainActivity : AppCompatActivity() {
 
             CoroutineScope(IO).launch {
                 println("debug: CoroutineScope")
-                fakeApiRequest()
+                val result = fakeApiRequest()
+                println("debug: result: ${result}")
             }
+
         }
 
     }
@@ -31,56 +32,68 @@ class MainActivity : AppCompatActivity() {
         val newText = text.text.toString() + "\n$input"
         text.text = newText
     }
-    private suspend fun setTextOnMainThread(input: String) {
-        withContext (Main) {
-            setNewText(input)
-        }
-    }
 
-    private suspend fun fakeApiRequest() {
-        coroutineScope {
+    private suspend fun fakeApiRequest(): String{
 
-            val parentJob = launch {
 
-                val executionTime = measureTimeMillis {
-                    val job1 = launch {
-                        println("debug: launching job1 in thread: ${Thread.currentThread().name}")
-                        val result1 = getResult1FromApi()
-                        setTextOnMainThread("Got $result1")
-                    }
-                    job1.join() // join job1 to parent job (blocking until completion)
+        val time = measureTimeMillis {
+            coroutineScope{
 
-                    val job2 = launch {
-                        println("debug: launching job2 in thread: ${Thread.currentThread().name}")
-                        val result2 = getResult2FromApi()
-                        setTextOnMainThread("Got $result2")
-                    }
-                    job2.join() // join job2 to parent job (blocking until completion)
+                val job1 = launch{
+                    println("debug: starting job 1")
+                    delay(1000)
+                    println("debug: done job 1")
                 }
-                println("debug: job1 and job2 are complete. It took ${executionTime} ms")
 
-            }
-
-            // Separate job within the same coroutine context that runs independently of parentJob, Job1 and Job2
-            launch {
-                for(delay in arrayOf(1, 2, 3, 4, 5, 6)){
-                    delay(500)
-                    println("debug: is parent job active?: ${parentJob.isActive}")
+                val job2 = launch{
+                    println("debug: staring job 2")
+                    delay(1500)
+                    println("debug: done job 2")
                 }
+
+                val job3 = launch{
+                    println("debug: starting job 3")
+                    delay(1000)
+                    println("debug: done job 3")
+                }
+
+                job1.join()
+                job2.join()
+                job3.join()
             }
-
-
         }
+        println("debug: elapsed time: ${time}")
+
+
+        return "All jobs are done."
     }
 
-    private suspend fun getResult1FromApi(): String {
-        delay(1000) // Does not block thread. Just suspends the coroutine inside the thread
-        return "Result #1"
-    }
-
-    private suspend fun getResult2FromApi(): String {
-        delay(1000)
-        return "Result #2"
-    }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
