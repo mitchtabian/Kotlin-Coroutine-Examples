@@ -47,7 +47,7 @@ class MainActivity : AppCompatActivity() {
      */
     private suspend fun fakeApiRequest() {
         coroutineScope {
-
+            
             val parentJob = launch {
 
                 val executionTime = measureTimeMillis {
@@ -56,13 +56,14 @@ class MainActivity : AppCompatActivity() {
                         println("debug: launching job1 in thread: ${Thread.currentThread().name}")
                         getResult1FromApi()
                     }
-                    setTextOnMainThread("Got ${result1.await()}")
+
 
                     val result2: Deferred<String> = async {
                         println("debug: launching job2 in thread: ${Thread.currentThread().name}")
                         getResult2FromApi()
                     }
 
+                    setTextOnMainThread("Got ${result1.await()}")
                     setTextOnMainThread("Got ${result2.await()}")
                 }
                 println("debug: job1 and job2 are complete. It took ${executionTime} ms")
