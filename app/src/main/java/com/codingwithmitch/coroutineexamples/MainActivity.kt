@@ -53,6 +53,7 @@ class MainActivity : AppCompatActivity() {
                 val result2 = getResult2FromApi()
                 setTextOnMainThread("Got $result2")
             }
+
         }
     }
 
@@ -62,7 +63,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private suspend fun getResult2FromApi(): String {
-        delay(2000)
+        delay(1000)
         return "Result #2"
     }
 
