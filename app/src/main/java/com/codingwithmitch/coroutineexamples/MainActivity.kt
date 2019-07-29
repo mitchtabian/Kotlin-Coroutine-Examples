@@ -52,13 +52,13 @@ class MainActivity : AppCompatActivity() {
                 val executionTime = measureTimeMillis {
 
                     val result1: Deferred<String> = async {
-                        println("debug: launching job1 in thread: ${Thread.currentThread().name}")
+                        println("debug: launching job1: ${Thread.currentThread().name}")
                         getResult1FromApi()
                     }
 
 
                     val result2: Deferred<String> = async {
-                        println("debug: launching job2 in thread: ${Thread.currentThread().name}")
+                        println("debug: launching job2: ${Thread.currentThread().name}")
                         getResult2FromApi()
                     }
 
