@@ -57,9 +57,6 @@ class MainActivity : AppCompatActivity() {
                     println("debug: done job 3")
                 }
 
-                job1.join()
-                job2.join()
-                job3.join()
             }
         }
         println("debug: elapsed time: ${time}")
