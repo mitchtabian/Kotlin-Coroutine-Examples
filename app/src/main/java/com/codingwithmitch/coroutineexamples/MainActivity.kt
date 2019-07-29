@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
     private suspend fun fakeApiRequest() {
         coroutineScope {
 
-            val job = withTimeoutOrNull(JOB_TIMEOUT) {
+            val job = launch {
 
                     val result1 = getResult1FromApi() // wait until job is done
 
@@ -58,8 +58,10 @@ class MainActivity : AppCompatActivity() {
                         setTextOnMainThread("Couldn't get Result #1")
                     }
             }
-
-            if(job == null){
+            delay(JOB_TIMEOUT)
+            if(job.isActive){
+                job.cancel()
+                job.join()
                 println("debug: Cancelling job...Job took longer than $JOB_TIMEOUT")
             }
 
