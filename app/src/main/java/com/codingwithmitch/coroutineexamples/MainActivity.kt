@@ -5,6 +5,7 @@ import android.os.Bundle
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.channels.Channel
 import kotlin.system.measureTimeMillis
 
 
@@ -17,15 +18,8 @@ class MainActivity : AppCompatActivity() {
 
         button.setOnClickListener {
             setNewText("Click!")
-
-            CoroutineScope(IO).launch {
-                println("debug: CoroutineScope")
-                val result = fakeApiRequest()
-                println("debug: result: ${result}") // waits until all jobs in coroutine scope are complete to return result
-            }
-
+            fakeApiRequest()
         }
-
     }
 
     private fun setNewText(input: String){
@@ -33,41 +27,26 @@ class MainActivity : AppCompatActivity() {
         text.text = newText
     }
 
-    private suspend fun fakeApiRequest(): String{
-
+    private fun fakeApiRequest() = runBlocking{
 
         val time = measureTimeMillis {
-            coroutineScope{
 
-                val job1 = launch{
-                    println("debug: starting job 1")
-                    delay(1000)
-                    println("debug: done job 1")
+                val channel = Channel<Int>()
+                launch(IO) {
+                    logThread()
+                    // this might be heavy CPU-consuming computation or async logic, we'll just send five squares
+                    for (x in 1..5) channel.send(x * x)
                 }
-
-                val job2 = launch{
-                    println("debug: staring job 2")
-                    delay(1500)
-                    println("debug: done job 2")
-                }
-
-                val job3 = launch{
-                    println("debug: starting job 3")
-                    delay(1000)
-                    println("debug: done job 3")
-                }
-
-                job1.join()
-                job2.join()
-                job3.join()
-            }
+                // here we print five received integers:
+                repeat(5) { println("debug: ${channel.receive()}") }
+                println("debug: Done!")
         }
-        println("debug: elapsed time: ${time}")
-
-
-        return "All jobs are done."
+        println("debug: elapsed time: ${time} ms")
     }
 
+    private fun logThread(){
+        println("debug: thread: ${Thread.currentThread().name}")
+    }
 
 }
 
