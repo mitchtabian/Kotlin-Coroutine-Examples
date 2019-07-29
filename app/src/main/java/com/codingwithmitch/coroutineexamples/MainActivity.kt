@@ -20,7 +20,6 @@ class MainActivity : AppCompatActivity() {
             setNewText("Click!")
 
             CoroutineScope(IO).launch {
-                println("debug: CoroutineScope")
                 fakeApiRequest()
             }
         }
