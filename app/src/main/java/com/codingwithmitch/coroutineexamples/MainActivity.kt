@@ -5,7 +5,9 @@ import android.os.Bundle
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.channels.produce
 import kotlin.system.measureTimeMillis
 
 
@@ -31,17 +33,27 @@ class MainActivity : AppCompatActivity() {
 
         val time = measureTimeMillis {
 
-                val channel = Channel<Int>()
-                launch(IO) {
-                    logThread()
-                    // this might be heavy CPU-consuming computation or async logic, we'll just send five squares
-                    for (x in 1..5) channel.send(x * x)
-                }
-                // here we print five received integers:
-                repeat(5) { println("debug: ${channel.receive()}") }
-                println("debug: Done!")
+            val job = launch(IO){
+                logThread()
+                val numbers = produceNumbers() // produces integers from 1 and on
+                val squares = square(numbers) // squares integers
+                for (i in 1..5) println("debug: ${squares.receive()}") // print first five
+                println("debug: Done!") // we are done
+                coroutineContext.cancelChildren() // cancel children coroutines
+            }
+
+            job.join()
         }
         println("debug: elapsed time: ${time} ms")
+    }
+
+    fun CoroutineScope.produceNumbers() = produce<Int> {
+        var x = 1
+        while (true) send(x++) // infinite stream of integers starting from 1
+    }
+
+    fun CoroutineScope.square(numbers: ReceiveChannel<Int>): ReceiveChannel<Int> = produce {
+        for (x in numbers) send(x * x)
     }
 
     private fun logThread(){
