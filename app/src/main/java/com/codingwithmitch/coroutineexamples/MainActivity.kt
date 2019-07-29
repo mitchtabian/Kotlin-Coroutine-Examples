@@ -19,7 +19,6 @@ class MainActivity : AppCompatActivity() {
             setNewText("Click!")
 
             CoroutineScope(IO).launch {
-                println("debug: CoroutineScope")
                 fakeApiRequest()
             }
         }
@@ -63,7 +62,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private suspend fun getResult2FromApi(): String {
-        delay(1000)
+        delay(2000)
         return "Result #2"
     }
 
