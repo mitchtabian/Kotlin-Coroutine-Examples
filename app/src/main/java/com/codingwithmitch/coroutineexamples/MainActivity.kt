@@ -10,7 +10,7 @@ import kotlinx.coroutines.Dispatchers.Main
 
 class MainActivity : AppCompatActivity() {
 
-    private val JOB_TIMEOUT = 1900L
+    private val JOB_TIMEOUT = 2100L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,35 +37,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private suspend fun fakeApiRequest() {
-        coroutineScope {
+        withContext(IO) {
 
             val job = withTimeoutOrNull(JOB_TIMEOUT) {
 
-                    val result1 = getResult1FromApi() // wait until job is done
+                val result1 = getResult1FromApi() // wait until job is done
+                setTextOnMainThread("Got $result1")
 
-                    if ( result1.equals("Result #1")) {
+                val result2 = getResult2FromApi() // wait until job is done
+                setTextOnMainThread("Got $result2")
 
-                        setTextOnMainThread("Got $result1")
-
-                        val result2 = getResult2FromApi() // wait until job is done
-
-                        if (result2.equals("Result #2")) {
-                            setTextOnMainThread("Got $result2")
-                        } else {
-                            setTextOnMainThread("Couldn't get Result #2")
-                        }
-                    } else {
-                        setTextOnMainThread("Couldn't get Result #1")
-                    }
-            }
+            } // waiting for job to complete...
 
             if(job == null){
-                println("debug: Cancelling job...Job took longer than $JOB_TIMEOUT")
+                val cancelMessage = "Cancelling job...Job took longer than $JOB_TIMEOUT ms"
+                println("debug: ${cancelMessage}")
+                setTextOnMainThread(cancelMessage)
             }
 
         }
     }
-    
+
     private suspend fun getResult1FromApi(): String {
         delay(1000) // Does not block thread. Just suspends the coroutine inside the thread
         return "Result #1"
