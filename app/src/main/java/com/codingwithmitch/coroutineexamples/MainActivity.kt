@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.ProgressBar
+import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
@@ -44,9 +45,13 @@ class MainActivity : AppCompatActivity() {
         updateJobCompleteTextView("")
         job = Job()
         job.invokeOnCompletion {
-            Log.d(TAG, "${job}: invoke on completion called.")
             it?.message.let{
-                Log.e(TAG, "${job} was cancelled. Reason: ${it}")
+                var msg = it
+                if(msg.isNullOrBlank()){
+                    msg = "Unknown cancellation error."
+                }
+                Log.e(TAG, "${job} was cancelled. Reason: ${msg}")
+                showToast(msg)
             }
         }
         job_progress_bar.max = PROGRESS_MAX
@@ -76,6 +81,12 @@ class MainActivity : AppCompatActivity() {
     private fun updateJobCompleteTextView(text: String){
         GlobalScope.launch (Main){
             job_complete_text.setText(text)
+        }
+    }
+
+    private fun showToast(text: String){
+        GlobalScope.launch (Main){
+            Toast.makeText(this@MainActivity, text, Toast.LENGTH_SHORT).show()
         }
     }
 
