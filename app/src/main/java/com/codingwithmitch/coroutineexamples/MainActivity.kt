@@ -2,71 +2,94 @@ package com.codingwithmitch.coroutineexamples
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import android.widget.ProgressBar
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
-import kotlin.system.measureTimeMillis
+import kotlinx.coroutines.Dispatchers.Main
 
 
 class MainActivity : AppCompatActivity() {
+
+    private val TAG: String = "AppDebug"
+
+    private val PROGRESS_MAX = 100
+    private val PROGRESS_START = 0
+    private val JOB_TIME = 4000 // ms
+    private lateinit var job: CompletableJob
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        button.setOnClickListener {
-            setNewText("Click!")
-
-            CoroutineScope(IO).launch {
-                println("debug: CoroutineScope")
-                val result = fakeApiRequest()
-                println("debug: result: ${result}") // waits until all jobs in coroutine scope are complete to return result
+        job_button.setOnClickListener {
+            if(!::job.isInitialized){
+                initjob()
             }
-
+            job_progress_bar.startJobOrCancel(job)
         }
-
     }
 
-    private fun setNewText(input: String){
-        val newText = text.text.toString() + "\n$input"
-        text.text = newText
+    fun resetjob(){
+        if(job.isActive || job.isCompleted){
+            job.cancel(CancellationException("Resetting job"))
+        }
+        initjob()
     }
 
-    private suspend fun fakeApiRequest(): String{
-
-
-        val time = measureTimeMillis {
-            coroutineScope{
-
-                val job1 = launch{
-                    println("debug: starting job 1")
-                    delay(1000)
-                    println("debug: done job 1")
-                }
-
-                val job2 = launch{
-                    println("debug: staring job 2")
-                    delay(1500)
-                    println("debug: done job 2")
-                }
-
-                val job3 = launch{
-                    println("debug: starting job 3")
-                    delay(1000)
-                    println("debug: done job 3")
-                }
-
+    fun initjob(){
+        job_button.setText("Start Job #1")
+        updateJobCompleteTextView("")
+        job = Job()
+        job.invokeOnCompletion {
+            Log.d(TAG, "${job}: invoke on completion called.")
+            it?.message.let{
+                Log.e(TAG, "${job} was cancelled. Reason: ${it}")
             }
         }
-        println("debug: elapsed time: ${time}")
+        job_progress_bar.max = PROGRESS_MAX
+        job_progress_bar.progress = PROGRESS_START
+    }
+    
 
+    fun ProgressBar.startJobOrCancel(job: Job){
+        if(this.progress > 0){
+            Log.d(TAG, "${job} is already active. Cancelling...")
+            resetjob()
+        }
+        else{
+            job_button.setText("Cancel Job #1")
+            CoroutineScope(IO + job).launch{
+                Log.d(TAG, "coroutine ${this} is activated with job ${job}.")
 
-        return "All jobs are done."
+                for(i in PROGRESS_START..PROGRESS_MAX){
+                    delay((JOB_TIME / PROGRESS_MAX).toLong())
+                    this@startJobOrCancel.progress = i
+                }
+                updateJobCompleteTextView("Job is complete!")
+            }
+        }
     }
 
+    private fun updateJobCompleteTextView(text: String){
+        GlobalScope.launch (Main){
+            job_complete_text.setText(text)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        job.cancel()
+    }
 
 }
+
+
+
+
+
 
 
 
