@@ -13,10 +13,11 @@ import kotlinx.coroutines.Dispatchers.Main
 
 class MainActivity : AppCompatActivity() {
 
-    private val TAG: String = "AppDebug"
+    private val TAG: String = "From_me:"
 
-    private val PROGRESS_MAX = 100
+    private val PROGRESS_MAX = 2500000
     private val PROGRESS_START = 0
+    private val PROGRESS_STEP = PROGRESS_MAX / 100
     private val JOB_TIME = 4000 // ms
     private lateinit var job: CompletableJob
 
@@ -41,10 +42,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun initjob(){
-        job_button.setText("Start Job #1")
+        job_button.text = "Start Job #1"
         updateJobCompleteTextView("")
         job = Job()
         job.invokeOnCompletion {
+            Log.d("From_me", "job = Job() invokeOnCompletion")
             it?.message.let{
                 var msg = it
                 if(msg.isNullOrBlank()){
@@ -65,15 +67,19 @@ class MainActivity : AppCompatActivity() {
             resetjob()
         }
         else{
-            job_button.setText("Cancel Job #1")
+            job_button.text = "Cancel Job #1"
             CoroutineScope(IO + job).launch{
                 Log.d(TAG, "coroutine ${this} is activated with job ${job}.")
-
                 for(i in PROGRESS_START..PROGRESS_MAX){
-                    delay((JOB_TIME / PROGRESS_MAX).toLong())
-                    this@startJobOrCancel.progress = i
+                    if (i % PROGRESS_STEP == 0) {
+                        Log.d("From_me", "for(i in PROGRESS_START..PROGRESS_MAX): $i")
+                    }
+                    this@startJobOrCancel.progress = i / PROGRESS_STEP
                 }
                 updateJobCompleteTextView("Job is complete!")
+                job.cancel(CancellationException("Ending !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!4"))
+            }.invokeOnCompletion {
+                Log.d("From_me", "CoroutineScope(IO + job) invokeOnCompletion(): Ending !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!4")
             }
         }
     }
