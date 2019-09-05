@@ -13,12 +13,12 @@ import kotlinx.coroutines.Dispatchers.Main
 
 class MainActivity : AppCompatActivity() {
 
-    private val TAG: String = "AppDebug"
+    private val TAG: String = "From_me:"
 
-    private val PROGRESS_MAX = 100
+    private val PROGRESS_MAX = 250000
     private val PROGRESS_START = 0
-    private val JOB_TIME = 4000 // ms
     private lateinit var job: CompletableJob
+    private var running = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,19 +29,13 @@ class MainActivity : AppCompatActivity() {
             if(!::job.isInitialized){
                 initjob()
             }
-            job_progress_bar.startJobOrCancel(job)
+            job_progress_bar.startJobOrCancel()
         }
     }
 
-    fun resetjob(){
-        if(job.isActive || job.isCompleted){
-            job.cancel(CancellationException("Resetting job"))
-        }
-        initjob()
-    }
-
-    fun initjob(){
-        job_button.setText("Start Job #1")
+    private fun initjob() {
+        running = false
+        job_button.text = "Start Job #1"
         updateJobCompleteTextView("")
         job = Job()
         job.invokeOnCompletion {
@@ -50,7 +44,7 @@ class MainActivity : AppCompatActivity() {
                 if(msg.isNullOrBlank()){
                     msg = "Unknown cancellation error."
                 }
-                Log.e(TAG, "${job} was cancelled. Reason: ${msg}")
+                Log.d(TAG, "CompletableJob ${job} was cancelled. Reason: ${msg}")
                 showToast(msg)
             }
         }
@@ -58,29 +52,41 @@ class MainActivity : AppCompatActivity() {
         job_progress_bar.progress = PROGRESS_START
     }
 
-
-    fun ProgressBar.startJobOrCancel(job: Job){
-        if(this.progress > 0){
+    private fun ProgressBar.startJobOrCancel(){
+        if(running){
             Log.d(TAG, "${job} is already active. Cancelling...")
-            resetjob()
-        }
-        else{
-            job_button.setText("Cancel Job #1")
+            running = false
+        } else {
+            running = true
+            job_button.text = "Cancel Job #1"
             CoroutineScope(IO + job).launch{
-                Log.d(TAG, "coroutine ${this} is activated with job ${job}.")
-
+                Log.d(TAG, "coroutine ${this} is activated with jobLocal ${job}.")
                 for(i in PROGRESS_START..PROGRESS_MAX){
-                    delay((JOB_TIME / PROGRESS_MAX).toLong())
+                    if (i % 25000 == 0) Log.d("From_me", "for(i in PROGRESS_START..PROGRESS_MAX: $i")
+                    if(!running) haltProgress()
                     this@startJobOrCancel.progress = i
                 }
                 updateJobCompleteTextView("Job is complete!")
+            }.let {coroutineScopeJob->
+                coroutineScopeJob.invokeOnCompletion{
+                    Log.d("From_me", "CoroutineScope(IO + jobLocal).launch.invokeOnCompletion: ")
+                    job.complete()
+                }
             }
+        }
+    }
+
+    private suspend fun haltProgress() = suspendCancellableCoroutine<String> { launch->
+        launch.cancel()
+        job.complete()
+        CoroutineScope(Main).launch {
+            initjob()
         }
     }
 
     private fun updateJobCompleteTextView(text: String){
         GlobalScope.launch (Main){
-            job_complete_text.setText(text)
+            job_complete_text.text = text
         }
     }
 
