@@ -15,7 +15,7 @@ class MainActivity : AppCompatActivity() {
 
     private val TAG: String = "AppDebug"
 
-    private val PROGRESS_MAX = 100
+    private val PROGRESS_MAX = 2500000
     private val PROGRESS_START = 0
     private val JOB_TIME = 4000 // ms
     private lateinit var job: CompletableJob
@@ -29,13 +29,14 @@ class MainActivity : AppCompatActivity() {
             if(!::job.isInitialized){
                 initjob()
             }
-            job_progress_bar.startJobOrCancel(job)
+            job_progress_bar.startJobOrCancel()
         }
     }
 
     fun resetjob(){
         if(job.isActive || job.isCompleted){
             job.cancel(CancellationException("Resetting job"))
+            job.complete()
         }
         initjob()
     }
@@ -59,21 +60,27 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    fun ProgressBar.startJobOrCancel(job: Job){
+    fun ProgressBar.startJobOrCancel(){
         if(this.progress > 0){
             Log.d(TAG, "${job} is already active. Cancelling...")
             resetjob()
         }
         else{
+            this.progress = 0
             job_button.setText("Cancel Job #1")
             CoroutineScope(IO + job).launch{
                 Log.d(TAG, "coroutine ${this} is activated with job ${job}.")
 
                 for(i in PROGRESS_START..PROGRESS_MAX){
-                    delay((JOB_TIME / PROGRESS_MAX).toLong())
+                    //delay((JOB_TIME / PROGRESS_MAX).toLong())
+                    if (i % 25000 == 0) Log.d("From_me", "for(i in PROGRESS_START..PROGRESS_MAX: $i")
                     this@startJobOrCancel.progress = i
                 }
                 updateJobCompleteTextView("Job is complete!")
+            }.let {
+                it.invokeOnCompletion {
+                    job.complete()
+                }
             }
         }
     }
