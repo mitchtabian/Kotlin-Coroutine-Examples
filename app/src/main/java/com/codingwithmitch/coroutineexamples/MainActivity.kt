@@ -71,6 +71,9 @@ class MainActivity : AppCompatActivity() {
                 coroutineScopeJob.invokeOnCompletion{
                     Log.d("From_me", "CoroutineScope(IO + jobLocal).launch.invokeOnCompletion: ")
                     job.complete()
+                    CoroutineScope(Main).launch {
+                        initjob()
+                    }
                 }
             }
         }
@@ -79,9 +82,6 @@ class MainActivity : AppCompatActivity() {
     private suspend fun haltProgress() = suspendCancellableCoroutine<String> { launch->
         launch.cancel()
         job.complete()
-        CoroutineScope(Main).launch {
-            initjob()
-        }
     }
 
     private fun updateJobCompleteTextView(text: String){
