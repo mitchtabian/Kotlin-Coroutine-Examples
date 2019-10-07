@@ -16,13 +16,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        button.setOnClickListener {
-            setNewText("Click!")
-
-            CoroutineScope(IO).launch {
-                fakeApiRequest()
-            }
-        }
 
     }
 
@@ -30,42 +23,10 @@ class MainActivity : AppCompatActivity() {
         val newText = text.text.toString() + "\n$input"
         text.text = newText
     }
+
     private suspend fun setTextOnMainThread(input: String) {
         withContext (Main) {
             setNewText(input)
-        }
-    }
-
-
-    /**
-     * async() is a blocking call (similar to the job pattern with job.join())
-    *  NOTES:
-    *  1) IF you don't call await(), it does not wait for the result
-    *  2) Calling await() on both these Deffered values will EXECUTE THEM IN PARALLEL. But the RESULTS won't
-    *     be published until the last result is available (in this case that's result2)
-     *
-     */
-    private suspend fun fakeApiRequest() {
-
-        withContext(IO) {
-
-            val executionTime = measureTimeMillis {
-
-                val result1: Deferred<String> = async {
-                    println("debug: launching job1: ${Thread.currentThread().name}")
-                    getResult1FromApi()
-                }
-
-
-                val result2: Deferred<String> = async {
-                    println("debug: launching job2: ${Thread.currentThread().name}")
-                    getResult2FromApi()
-                }
-
-                setTextOnMainThread("Got ${result1.await()}")
-                setTextOnMainThread("Got ${result2.await()}")
-            }
-            println("debug: job1 and job2 are complete. It took ${executionTime} ms")
         }
     }
 
@@ -80,3 +41,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 }
+
+
+
+
