@@ -51,19 +51,26 @@ class MainActivity : AppCompatActivity() {
 
             val executionTime = measureTimeMillis {
 
-                val result1: Deferred<String> = async {
+//                val result1 = async {
+//                    println("debug: launching job1: ${Thread.currentThread().name}")
+//                    getResult1FromApi()
+//                }.await()
+
+
+                var result1 = ""
+                val job1 = launch{
                     println("debug: launching job1: ${Thread.currentThread().name}")
-                    getResult1FromApi()
+                    result1 = getResult1FromApi()
                 }
+                job1.join()
 
 
-                val result2: Deferred<String> = async {
+                val result2 = async {
                     println("debug: launching job2: ${Thread.currentThread().name}")
-                    getResult2FromApi()
-                }
+                    getResult2FromApi(result1)
+                }.await()
+                println("Got result2: $result2")
 
-                setTextOnMainThread("Got ${result1.await()}")
-                setTextOnMainThread("Got ${result2.await()}")
             }
             println("debug: job1 and job2 are complete. It took ${executionTime} ms")
         }
@@ -74,7 +81,7 @@ class MainActivity : AppCompatActivity() {
         return "Result #1"
     }
 
-    private suspend fun getResult2FromApi(): String {
+    private suspend fun getResult2FromApi(result1: String): String {
         delay(1700)
         return "Result #2"
     }
