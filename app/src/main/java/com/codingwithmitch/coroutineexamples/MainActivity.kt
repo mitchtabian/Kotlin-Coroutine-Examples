@@ -5,6 +5,7 @@ import android.os.Bundle
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
 import kotlin.system.measureTimeMillis
 
 
@@ -19,9 +20,12 @@ class MainActivity : AppCompatActivity() {
             setNewText("Click!")
 
             CoroutineScope(IO).launch {
-                println("debug: CoroutineScope")
+                println("debug: Launching coroutine: $this")
                 val result = fakeApiRequest()
-                println("debug: result: ${result}") // waits until all jobs in coroutine scope are complete to return result
+
+                // waits until all jobs in coroutine scope are complete to return result
+                println("debug: result: ${result}")
+                setNewText(result)
             }
 
         }
@@ -29,40 +33,44 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setNewText(input: String){
-        val newText = text.text.toString() + "\n$input"
-        text.text = newText
+        GlobalScope.launch(Main){
+            val newText = text.text.toString() + "\n$input"
+            text.text = newText
+        }
     }
 
     private suspend fun fakeApiRequest(): String{
 
+        var timeElapsed = 0L
+        withContext(IO) {
 
-        val time = measureTimeMillis {
-            coroutineScope{
+            val time = measureTimeMillis {
 
-                val job1 = launch{
+                val job1 = launch {
                     println("debug: starting job 1")
                     delay(1000)
                     println("debug: done job 1")
                 }
 
-                val job2 = launch{
+                val job2 = launch {
                     println("debug: staring job 2")
                     delay(1500)
                     println("debug: done job 2")
                 }
 
-                val job3 = launch{
+                val job3 = launch {
                     println("debug: starting job 3")
                     delay(1000)
                     println("debug: done job 3")
                 }
-
+                job1.join()
+                job2.join()
+                job3.join()
             }
+            timeElapsed = time
+            println("debug: elapsed time: ${timeElapsed}")
         }
-        println("debug: elapsed time: ${time}")
-
-
-        return "All jobs are done."
+        return "Jobs completed within $timeElapsed ms."
     }
 
 
