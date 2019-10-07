@@ -42,52 +42,40 @@ class MainActivity : AppCompatActivity() {
     *  NOTES:
     *  1) IF you don't call await(), it does not wait for the result
     *  2) Calling await() on both these Deffered values will EXECUTE THEM IN PARALLEL. But the RESULTS won't
-    *     be published until the last result is available (in this case that's result2
+    *     be published until the last result is available (in this case that's result2)
+     *
      */
     private suspend fun fakeApiRequest() {
-        coroutineScope {
-            
-            val parentJob = launch {
 
-                val executionTime = measureTimeMillis {
+        withContext(IO) {
 
-                    val result1: Deferred<String> = async {
-                        println("debug: launching job1: ${Thread.currentThread().name}")
-                        getResult1FromApi()
-                    }
+            val executionTime = measureTimeMillis {
 
-
-                    val result2: Deferred<String> = async {
-                        println("debug: launching job2: ${Thread.currentThread().name}")
-                        getResult2FromApi()
-                    }
-
-                    setTextOnMainThread("Got ${result1.await()}")
-                    setTextOnMainThread("Got ${result2.await()}")
+                val result1: Deferred<String> = async {
+                    println("debug: launching job1: ${Thread.currentThread().name}")
+                    getResult1FromApi()
                 }
-                println("debug: job1 and job2 are complete. It took ${executionTime} ms")
 
-            }
 
-            // Separate job within the same coroutine context that runs independently of parentJob, Job1 and Job2
-            launch {
-                for(delay in arrayOf(1, 2, 3, 4, 5, 6)){
-                    delay(500)
-                    println("debug: is parent job active?: ${parentJob.isActive}")
+                val result2: Deferred<String> = async {
+                    println("debug: launching job2: ${Thread.currentThread().name}")
+                    getResult2FromApi()
                 }
+
+                setTextOnMainThread("Got ${result1.await()}")
+                setTextOnMainThread("Got ${result2.await()}")
             }
-
-
+            println("debug: job1 and job2 are complete. It took ${executionTime} ms")
         }
     }
 
     private suspend fun getResult1FromApi(): String {
-        delay(1000) // Does not block thread. Just suspends the coroutine inside the thread
+        delay(1000)
         return "Result #1"
     }
 
     private suspend fun getResult2FromApi(): String {
-        delay(1000)
+        delay(1700)
         return "Result #2"
     }
 
