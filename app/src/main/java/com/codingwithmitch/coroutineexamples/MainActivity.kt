@@ -38,12 +38,8 @@ class MainActivity : AppCompatActivity() {
 
 
     /**
-     * async() is a blocking call (similar to the job pattern with job.join())
-    *  NOTES:
-    *  1) IF you don't call await(), it does not wait for the result
-    *  2) Calling await() on both these Deffered values will EXECUTE THEM IN PARALLEL. But the RESULTS won't
-    *     be published until the last result is available (in this case that's result2)
-     *
+     * Comparison between async/await and job/launch patterns.
+     * Major difference is async/await can return a value wrapped in a Deferred type.
      */
     private suspend fun fakeApiRequest() {
 
@@ -51,12 +47,14 @@ class MainActivity : AppCompatActivity() {
 
             val executionTime = measureTimeMillis {
 
+                // Async/Await returning a value
 //                val result1 = async {
 //                    println("debug: launching job1: ${Thread.currentThread().name}")
 //                    getResult1FromApi()
 //                }.await()
 
 
+                // Classic job/launch
                 var result1 = ""
                 val job1 = launch{
                     println("debug: launching job1: ${Thread.currentThread().name}")
