@@ -1,6 +1,8 @@
 package com.codingwithmitch.coroutineexamples
 
 import androidx.room.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable.cancel
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 import java.lang.Exception
@@ -17,7 +19,7 @@ interface PeopleDao{
                 }
                 insert(person)
             }catch (e: Exception){
-                cancel("Something went wrong")
+                cancel(CancellationException("Something went wrong"))
             }
         }
     }
