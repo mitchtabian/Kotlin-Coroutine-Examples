@@ -1,10 +1,26 @@
 package com.codingwithmitch.coroutineexamples
 
 import androidx.room.*
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
+import java.lang.Exception
 
 @Dao
 interface PeopleDao{
 
+    @Transaction
+    suspend fun insertPeople(people: List<Person>) = coroutineScope {
+        for((index, person) in people.withIndex()){
+            try{
+                if(index == 3){
+                    throw Exception()
+                }
+                insert(person)
+            }catch (e: Exception){
+                cancel("Something went wrong")
+            }
+        }
+    }
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(person: Person): Long
