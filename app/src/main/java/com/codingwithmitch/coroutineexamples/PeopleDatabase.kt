@@ -9,14 +9,14 @@ import androidx.room.RoomDatabase
 @Database(entities = [Person::class], version = 1)
 abstract class PeopleDatabase : RoomDatabase() {
 
-    abstract val peopleDao: PeopleDao?
+    abstract val peopleDao: PeopleDao
 
     companion object{
 
         fun buildDatabase(application: Application): PeopleDatabase{
-            return Room.databaseBuilder(
+            return Room.inMemoryDatabaseBuilder(
                 application,
-                PeopleDatabase::class.java, "people_db"
+                PeopleDatabase::class.java
             ).build()
         }
     }
