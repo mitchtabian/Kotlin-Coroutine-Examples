@@ -6,6 +6,9 @@ import android.util.Log
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
+import java.lang.Exception
+import kotlin.coroutines.CoroutineContext
+import kotlin.random.Random
 
 
 class MainActivity : AppCompatActivity() {
@@ -25,34 +28,44 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun main(){
-        val startTime = System.currentTimeMillis()
-        CoroutineScope(IO).launch {
-            val job1 = async(start = CoroutineStart.LAZY) { getResult1() }
-            val job2 = async(start = CoroutineStart.LAZY) { getResult2() }
-            job1.start()
-            job2.start()
-            val result1 = job1.await()
-            println("Got result1.")
-            val result2 = job2.await()
-            println("Got result2.")
-            println("Done in ${System.currentTimeMillis() - startTime} " +
-                    "ms. Result1: ${result1}, Result2: ${result2}")
+    fun main()  {
+
+        for(index in 1..10){
+            CoroutineScope(IO).launch {
+                try{
+                    println("RESULT: ${attemptConcurrentSum()}")
+                }catch (e: Exception){
+                    println("${e.message}")
+                }
+
+            }
         }
+
     }
 
-    suspend fun getResult1(): Int {
-        println("Starting Job1!")
-        delay(2000)
-        println("Result1 is READY...")
-        return 1
+    suspend fun attemptConcurrentSum(): String = coroutineScope {
+        val randomNum1 = async {
+            delay(500)
+            getRandomNumber(false)
+        }
+
+        val randomNum2 = async {
+            delay(2000)
+            getRandomNumber(false)
+        }
+        val num1 = randomNum1.await()
+        val num2 = randomNum2.await()
+        println("NumOne=${num1}, NumTwo=${num2}")
+        "${(num1+ num2)}"
     }
 
-    suspend fun getResult2(): Int{
-        println("Starting Job2!")
-        delay(500)
-        println("Result2 is READY...")
-        return 2
+    fun getRandomNumber(shouldFail: Boolean): Int{
+        return if(shouldFail){
+            throw ArithmeticException("Something went wrong! ")
+        }
+        else{
+            Random.nextInt(1,11)
+        }
     }
 
 
