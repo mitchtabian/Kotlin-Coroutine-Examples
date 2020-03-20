@@ -6,7 +6,6 @@ import android.util.Log
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
 
 
 class MainActivity : AppCompatActivity() {
@@ -27,18 +26,35 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun main(){
-        CoroutineScope(Main).launch {
-            doNetworkRequest()
+        val startTime = System.currentTimeMillis()
+        CoroutineScope(IO).launch {
+            val job1 = async(start = CoroutineStart.LAZY) { getResult1() }
+            val job2 = async(start = CoroutineStart.LAZY) { getResult2() }
+            job1.start()
+            job2.start()
+            val result1 = job1.await()
+            println("Got result1.")
+            val result2 = job2.await()
+            println("Got result2.")
+            println("Done in ${System.currentTimeMillis() - startTime} " +
+                    "ms. Result1: ${result1}, Result2: ${result2}")
         }
     }
 
-
-    suspend fun doNetworkRequest(){
-        println("Starting network request...")
-        Thread.sleep(5000)
-//        delay(5000) // delay will NOT freeze the UI by default
-        println("Finished network request!")
+    suspend fun getResult1(): Int {
+        println("Starting Job1!")
+        delay(2000)
+        println("Result1 is READY...")
+        return 1
     }
+
+    suspend fun getResult2(): Int{
+        println("Starting Job2!")
+        delay(500)
+        println("Result2 is READY...")
+        return 2
+    }
+
 
     private fun println(message: String){
         Log.d(TAG, message)
