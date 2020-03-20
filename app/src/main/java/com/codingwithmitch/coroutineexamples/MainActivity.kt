@@ -19,13 +19,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//        CoroutineScope(IO).launch {
-        CoroutineScope(Main).launch {
-            doNetworkRequest()
-        }
+        main()
 
         button.setOnClickListener {
             text.setText((count++).toString())
+        }
+    }
+
+    fun main(){
+        CoroutineScope(Main).launch {
+            doNetworkRequest()
         }
     }
 
