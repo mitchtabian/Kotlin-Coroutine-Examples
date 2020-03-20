@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
     fun addPeople() {
 
         CoroutineScope(IO).launch {
-            val result = dao.insertPeople(DataSource.providePeople())
+            dao.insertPeople(DataSource.providePeople())
         }
     }
 
