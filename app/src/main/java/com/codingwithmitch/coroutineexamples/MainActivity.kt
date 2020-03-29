@@ -30,38 +30,42 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun main(){
+
         val parentJob = CoroutineScope(Main).launch(handler) {
 
-            // --------- JOB A ---------
-            val jobA = launch {
-                val resultA = getResult(1)
-                println("resultA: ${resultA}")
-            }
-            jobA.invokeOnCompletion { throwable ->
-                if(throwable != null){
-                    println("Error getting resultA: ${throwable}")
-                }
-            }
+            supervisorScope { // *** Make sure to handle errors in children ***
 
-            // --------- JOB B ---------
-            val jobB = launch {
-                val resultB = getResult(2)
-                println("resultB: ${resultB}")
-            }
-            jobB.invokeOnCompletion { throwable ->
-                if(throwable != null){
-                    println("Error getting resultB: ${throwable}")
+                // --------- JOB A ---------
+                val jobA = launch {
+                    val resultA = getResult(1)
+                    println("resultA: ${resultA}")
                 }
-            }
+                jobA.invokeOnCompletion { throwable ->
+                    if(throwable != null){
+                        println("Error getting resultA: ${throwable}")
+                    }
+                }
 
-            // --------- JOB C ---------
-            val jobC = launch {
-                val resultC = getResult(3)
-                println("resultC: ${resultC}")
-            }
-            jobC.invokeOnCompletion { throwable ->
-                if(throwable != null){
-                    println("Error getting resultC: ${throwable}")
+                // --------- JOB B ---------
+                val jobB = launch {
+                    val resultB = getResult(2)
+                    println("resultB: ${resultB}")
+                }
+                jobB.invokeOnCompletion { throwable ->
+                    if(throwable != null){
+                        println("Error getting resultB: ${throwable}")
+                    }
+                }
+
+                // --------- JOB C ---------
+                val jobC = launch {
+                    val resultC = getResult(3)
+                    println("resultC: ${resultC}")
+                }
+                jobC.invokeOnCompletion { throwable ->
+                    if(throwable != null){
+                        println("Error getting resultC: ${throwable}")
+                    }
                 }
             }
         }
