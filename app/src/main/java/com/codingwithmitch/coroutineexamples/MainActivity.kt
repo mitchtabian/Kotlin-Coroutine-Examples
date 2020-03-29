@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 
 
@@ -17,7 +18,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         main()
-
     }
 
     val handler = CoroutineExceptionHandler { _, exception ->
@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun main(){
-        val parentJob = CoroutineScope(Main).launch(handler) {
+        val parentJob = CoroutineScope(IO).launch(handler) {
 
             // --------- JOB A ---------
             val jobA = launch {
