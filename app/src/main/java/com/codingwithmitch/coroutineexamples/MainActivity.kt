@@ -12,17 +12,12 @@ class MainActivity : AppCompatActivity() {
 
     private val TAG: String = "AppDebug"
 
-    var count = 0
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         main()
 
-        button.setOnClickListener {
-            text.setText((count++).toString())
-        }
     }
 
     val handler = CoroutineExceptionHandler { _, exception ->
